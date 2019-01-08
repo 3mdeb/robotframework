@@ -15,7 +15,7 @@
 
 from collections import OrderedDict
 
-from robot.errors import (ExecutionFailed, ExecutionFailures, ExecutionPassed,
+from robot.errors import (ExecutionFailed, ExecutionFailures, ExecutionPassed, ExecutionSkipped,
                           ExitForLoop, ContinueForLoop, DataError)
 from robot.result import Keyword as KeywordResult
 from robot.output import librarylogger as logger
@@ -39,6 +39,9 @@ class StepRunner(object):
             try:
                 self.run_step(step)
             except ExecutionPassed as exception:
+                exception.set_earlier_failures(errors)
+                raise exception
+            except ExecutionSkipped as exception:
                 exception.set_earlier_failures(errors)
                 raise exception
             except ExecutionFailed as exception:
@@ -129,6 +132,9 @@ class ForInRunner(object):
             except ExecutionPassed as exception:
                 exception.set_earlier_failures(errors)
                 raise exception
+            except ExecutionSkipped as exception:
+            	exception.set_earlier_failures(errors)
+            	raise exception
             except ExecutionFailed as exception:
                 errors.extend(exception.get_errors())
                 if not exception.can_continue(self._context.in_teardown,

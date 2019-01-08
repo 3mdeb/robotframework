@@ -14,7 +14,8 @@
 #  limitations under the License.
 
 from robot.errors import (ExecutionFailed, ExecutionStatus, DataError,
-                          HandlerExecutionFailed, KeywordError, VariableError)
+                          HandlerExecutionFailed, KeywordError, VariableError,
+                          ExecutionSkipped)
 from robot.utils import ErrorDetails, get_timestamp
 
 
