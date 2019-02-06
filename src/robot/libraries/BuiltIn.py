@@ -1633,7 +1633,7 @@ class _RunKeyword(_BuiltInBase):
             except ExecutionPassed as err:
                 err.set_earlier_failures(errors)
                 raise err
-            except ExecutionSkipped, err:
+            except ExecutionSkipped as err:
                 err.set_earlier_failures(errors)
                 raise err
             except ExecutionFailed as err:
