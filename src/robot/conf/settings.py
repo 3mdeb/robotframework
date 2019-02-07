@@ -43,6 +43,7 @@ class _BaseSettings(object):
                  'SetTag'           : ('settag', []),
                  'Include'          : ('include', []),
                  'Exclude'          : ('exclude', []),
+                 'Skip'             : ('skip', []),
                  'Critical'         : ('critical', None),
                  'NonCritical'      : ('noncritical', None),
                  'OutputDir'        : ('outputdir', abspath('.')),
@@ -411,7 +412,7 @@ class RobotSettings(_BaseSettings):
         settings._opts.update(self._opts)
         for name in ['Variables', 'VariableFiles', 'Listeners']:
             del(settings._opts[name])
-        for name in ['Include', 'Exclude', 'TestNames', 'SuiteNames', 'Metadata']:
+        for name in ['Include', 'Exclude','TestNames', 'SuiteNames', 'Metadata']:
             settings._opts[name] = []
         for name in ['Name', 'Doc']:
             settings._opts[name] = None
