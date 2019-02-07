@@ -283,7 +283,7 @@ class PassExecution(ExecutionPassed):
 
     def __init__(self, message):
         ExecutionPassed.__init__(self, message)
-        self.earlier_failures = []
+        self._earlier_failures = []
 
 class ExecutionSkipped(ExecutionFailed):
     """Base class for all exceptions communicating that execution skipped.
