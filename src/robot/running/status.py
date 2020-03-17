@@ -150,7 +150,7 @@ class TestStatus(_ExecutionStatus):
         self.exit.failure_occurred(failure, self._test.critical)
 
     def test_skipped(self, skip, critical):
-        self.failure.skip = unicode(skip)
+        self.failure.skip = str(skip)
 
     def _my_message(self):
         return TestMessage(self).message
