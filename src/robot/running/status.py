@@ -106,7 +106,11 @@ class _ExecutionStatus(object):
     def status(self):
         if self.failures and self.failure.skip != 'SKIP':
             return 'FAIL'
-        if not self.failures and self.failure.skip == 'SKIP':
+        if self.failure.skip == 'SKIP':
+            # Teardown still executes when a test is skipped. If it fails the
+            # status will still be marked as 'SKIP'.
+            # As this fork will be likely abandoned when official support for
+            # Skip from robot framework will be added it likely won't be fixed
             return 'SKIP'
         return 'PASS'
 
