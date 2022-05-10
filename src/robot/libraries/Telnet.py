@@ -420,7 +420,7 @@ class Telnet:
             return int(cols), int(rows)
         except ValueError:
             raise ValueError("Invalid window size '%s'. Should be "
-                             "<rows>x<columns>." % window_size)
+                             "<columns>x<row>." % window_size)
 
     def _get_connection(self, *args):
         """Can be overridden to use a custom connection."""
@@ -786,14 +786,22 @@ class TelnetConnection(telnetlib.Telnet):
             return self._encode(self._newline)
         return self._newline
 
-    def write_bare(self, text):
-        """Writes the given text, and nothing else, into the connection.
-
+    def write_bare(self, text, char_delay=None):
+       """Writes the given text, and nothing else, into the connection.
+        
+        If char_delay parameter specified function sends characters one by one
+        with delay defined in seconds.
+        
         This keyword does not append a newline nor consume the written text.
         Use `Write` if these features are needed.
         """
         self._verify_connection()
-        telnetlib.Telnet.write(self, self._encode(text))
+        if char_delay:
+            for ch in list(text):
+                telnetlib.Telnet.write(self, self._encode(ch))
+                time.sleep(float(char_delay))
+        else:
+            telnetlib.Telnet.write(self, self._encode(text))
 
     def write_until_expected_output(self, text, expected, timeout,
                                     retry_interval, loglevel=None):
@@ -1156,11 +1164,11 @@ class TelnetConnection(telnetlib.Telnet):
 class TerminalEmulator:
 
     def __init__(self, window_size=None, newline="\r\n"):
-        self._rows, self._columns = window_size or (200, 200)
+        self._columns, self._rows = window_size or (200, 200)
         self._newline = newline
         self._stream = pyte.Stream()
-        self._screen = pyte.HistoryScreen(self._rows,
-                                          self._columns,
+        self._screen = pyte.HistoryScreen(self._columns,
+                                          self._rows,
                                           history=100000)
         self._stream.attach(self._screen)
         self._buffer = ''
