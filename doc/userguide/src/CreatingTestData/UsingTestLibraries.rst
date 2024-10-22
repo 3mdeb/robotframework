@@ -205,7 +205,6 @@ documentations:
   - Process_
   - Screenshot_
   - String_
-  - Telnet_
   - XML_
 
 .. _BuiltIn: ../libraries/BuiltIn.html
@@ -216,7 +215,6 @@ documentations:
 .. _Process: ../libraries/Process.html
 .. _String: ../libraries/String.html
 .. _Screenshot: ../libraries/Screenshot.html
-.. _Telnet: ../libraries/Telnet.html
 .. _XML: ../libraries/XML.html
 
 Remote library

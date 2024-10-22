@@ -111,7 +111,7 @@ def library_docs(ctx, name):
     """
     libraries = ['BuiltIn', 'Collections', 'DateTime', 'Dialogs',
                  'OperatingSystem', 'Process', 'Screenshot', 'String',
-                 'Telnet', 'XML']
+                 'XML']
     name = name.lower()
     if name != 'all':
         libraries = [lib for lib in libraries if lib.lower().startswith(name)]

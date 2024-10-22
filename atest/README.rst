@@ -84,7 +84,7 @@ Examples:
     # Exclude tests requiring lxml. See the Test tags section for more information.
     atest/run.py --exclude require-lxml
 
-    # Exclude tests requiring manual interaction or Telnet server.
+    # Exclude tests requiring manual interaction server.
     # This is needed when executing a specified directory containing such tests.
     # If data is not specified, these tests are excluded automatically.
     atest/run.py --exclude no-ci atest/robot/standard_libraries
@@ -125,13 +125,9 @@ avoid running tests with dependencies_ that are not met.
 manual
   Require manual interaction from user. Used with Dialogs library tests.
 
-telnet
-  Require a Telnet server with test account running on localhost. See
-  `Telnet tests`_ for details.
-
 no-ci
   Tests which are not executed at continuous integration. Contains all tests
-  tagged with `manual` or `telnet`.
+  tagged with `manual`.
 
 require-yaml, require-lxml, require-screenshot
   Require specified Python module or some other external tool to be installed.
@@ -226,14 +222,6 @@ Libdoc XML and JSON spec schemas
 Libdoc can create spec files both in XML and JSON formats and they both have
 `schemas <../doc/schema>`_. All generated Libdoc specs are validated automatically
 in Libdoc tests.
-
-Telnet tests
-------------
-
-Running telnet tests requires some extra setup. Instructions how to run them
-can be found from `<testdata/standard_libraries/telnet/README.rst>`_.
-If you don't want to run an unprotected telnet server on your machine, you can
-always skip these tests by excluding tests with a tag `telnet` or `no-ci`.
 
 License and copyright
 ---------------------

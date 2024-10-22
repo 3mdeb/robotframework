@@ -89,14 +89,6 @@ robot.libraries.String module
    :undoc-members:
    :show-inheritance:
 
-robot.libraries.Telnet module
------------------------------
-
-.. automodule:: robot.libraries.Telnet
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 robot.libraries.XML module
 --------------------------
 

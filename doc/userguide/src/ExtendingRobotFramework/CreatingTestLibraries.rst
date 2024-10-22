@@ -3546,9 +3546,6 @@ an actual library implementation elsewhere, because then the actual
 keyword must be executed elsewhere and the proxy can only pass forward
 the keyword name and arguments.
 
-A good example of using the hybrid API is Robot Framework's own
-Telnet_ library.
-
 Using Robot Framework's internal modules
 ----------------------------------------
 

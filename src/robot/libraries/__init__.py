@@ -28,4 +28,4 @@ the http://robotframework.org web site.
 
 STDLIBS = frozenset(('BuiltIn', 'Collections', 'DateTime', 'Dialogs', 'Easter',
                      'OperatingSystem', 'Process', 'Remote', 'Screenshot',
-                     'String', 'Telnet', 'XML'))
+                     'String', 'XML'))
