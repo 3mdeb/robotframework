@@ -462,7 +462,7 @@ class Telnet:
             return int(cols), int(rows)
         except ValueError:
             raise ValueError(
-                f"Invalid window size '{window_size}'. Should be <rows>x<columns>."
+                f"Invalid window size '{window_size}'. Should be <columns>x<row>."
             )
 
     def _get_connection(self, *args):
@@ -854,14 +854,23 @@ class TelnetConnection(telnetlib.Telnet):
             return self._encode(self._newline)
         return self._newline
 
-    def write_bare(self, text):
+    def write_bare(self, text, char_delay=None):
         """Writes the given text, and nothing else, into the connection.
-
+        
+        If char_delay parameter specified function sends characters one by one
+        with delay defined in seconds.
+        
         This keyword does not append a newline nor consume the written text.
         Use `Write` if these features are needed.
         """
+        
         self._verify_connection()
-        super().write(self._encode(text))
+        if char_delay:
+            for ch in list(text):
+                super().write(self, self._encode(ch))
+                time.sleep(float(char_delay))
+        else:
+            super().write(self._encode(text))
 
     def write_until_expected_output(
         self,
@@ -1251,10 +1260,12 @@ class TelnetConnection(telnetlib.Telnet):
 
 class TerminalEmulator:
     def __init__(self, window_size=None, newline="\r\n"):
-        self._rows, self._columns = window_size or (200, 200)
+        self._columns, self._rows = window_size or (200, 200)
         self._newline = newline
         self._stream = pyte.Stream()
-        self._screen = pyte.HistoryScreen(self._rows, self._columns, history=100000)
+        self._screen = pyte.HistoryScreen(self._columns,
+                                          self._rows,
+                                          history=100000)
         self._stream.attach(self._screen)
         self._buffer = ""
         self._whitespace_after_last_feed = ""
