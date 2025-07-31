@@ -867,7 +867,7 @@ class TelnetConnection(telnetlib.Telnet):
         self._verify_connection()
         if char_delay:
             for ch in list(text):
-                super().write(self, self._encode(ch))
+                super().write(self._encode(ch))
                 time.sleep(float(char_delay))
         else:
             super().write(self._encode(text))
