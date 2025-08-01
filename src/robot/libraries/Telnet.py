@@ -21,6 +21,7 @@ import telnetlib
 import time
 from contextlib import contextmanager
 
+import robot.utils.fuzzy as fuzzy
 try:
     import pyte
 except ImportError:
@@ -983,7 +984,36 @@ class TelnetConnection(telnetlib.Telnet):
         if not success:
             raise NoMatchError(expected, self._timeout, output)
         return output
+    
+    def read_until_fuzzy(self, expected, percent_match=None, max_errors=None, loglevel=None):
+        """Reads output until ``expected`` text is matched using fuzzy comparison.
 
+        Text up to and including the match is returned and logged. If no match
+        is found, this keyword fails. How much to wait for the output depends
+        on the [#Configuration|configured timeout].
+
+        Set `percent_match` to match strings where `percent_match` of characters are correct
+        Set `max_errors` to match strings, which differ at a maximum of `max_errors` characters
+        `max_errors` overrides `percent_match` when both are set.
+
+        See `Logging` section for more information about log levels. Use
+        `Read Until Regexp` if more complex matching is needed.
+        """
+        success, output = self._read_until_fuzzy(expected, percent_match, max_errors)
+        self._log(output, loglevel)
+        if not success:
+            raise NoMatchError(expected, self._timeout, output)
+        return output
+
+    def _read_until_fuzzy(self, expected, percent_match=None, max_errors=None):
+        self._verify_connection()
+        if self._terminal_emulator:
+            return self._terminal_read_until_fuzzy(expected)
+        expected = self._encode(expected)
+        output = telnetlib.Telnet.read_until_fuzzy(self, expected, self._timeout, percent_match, max_errors)
+        found = fuzzy.fuzzy_find(output, expected, percent_match, max_errors) is not None
+        return found, self._decode(output)
+    
     def _read_until(self, expected):
         self._verify_connection()
         if self._terminal_emulator:
@@ -1007,6 +1037,20 @@ class TelnetConnection(telnetlib.Telnet):
             )
             self._terminal_emulator.feed(self._decode(output))
             output = self._terminal_emulator.read_until(expected)
+            if output:
+                return True, output
+        return False, self._terminal_emulator.read()
+    
+    def _terminal_read_until_fuzzy(self, expected, percent_match=None, max_errors=None):
+        max_time = time.time() + self._timeout
+        output = self._terminal_emulator.read_until_fuzzy(expected, percent_match, max_errors)
+        if output:
+            return True, output
+        while time.time() < max_time:
+            output = telnetlib.Telnet.read_until_fuzzy(self, self._encode(expected),
+                                                 self._terminal_frequency, percent_match, max_errors)
+            self._terminal_emulator.feed(self._decode(output))
+            output = self._terminal_emulator.read_until_fuzzy(expected, percent_match, max_errors)
             if output:
                 return True, output
         return False, self._terminal_emulator.read()
@@ -1312,6 +1356,21 @@ class TerminalEmulator:
             return current_out[: exp_index + len(expected)]
         return None
 
+    def read_until_fuzzy(self, expected, percent_match=None, max_errors=None):
+        current_out = self.current_output
+
+        match = fuzzy.fuzzy_find(current_out, expected, percent_match, max_errors)
+        if match is None:
+            return None
+        
+        exp_index = match.start
+        match_len = len(match.matched)
+        current_out.find(expected)
+        if exp_index != -1:
+            self._update_buffer(current_out[exp_index+match_len:])
+            return current_out[:exp_index+match_len]
+        return None
+
     def read_until_regexp(self, regexp_list):
         current_out = self.current_output
         for rgx in regexp_list:
@@ -1346,3 +1405,5 @@ class NoMatchError(AssertionError):
         if self.output is not None:
             msg += " Output:\n" + self.output
         return msg
+
+
