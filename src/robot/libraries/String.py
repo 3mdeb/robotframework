@@ -15,6 +15,7 @@
 
 import os
 import re
+import robot.utils.fuzzy as fuzzy
 from fnmatch import fnmatchcase
 from random import randint
 from string import ascii_lowercase, ascii_uppercase, digits
@@ -287,6 +288,24 @@ class String:
             else:
                 ret = 0
         return ret
+    
+    def get_line_number_containing_string_fuzzy(self, string, pattern, percent_match=None, max_errors=None, case_insensitive=False):
+        """Returns line number of the given ``string`` that contain the ``pattern``.
+        The ``pattern`` is always considered to be a normal string, not a glob
+        or regexp pattern. A line matches if the ``pattern`` is found anywhere
+        on it.
+
+        Examples:
+        | ${lines} = | Get Line Number Containing String | ${result} | An example |
+        | ${ret} =   | Get Line Number Containing String | ${ret} | FAIL | case-insensitive |
+        
+        If multiple line match only line number of first occurrence is returned.
+        """
+        for n,l in enumerate(string.splitlines()):
+            matches = fuzzy.fuzzy_find(l, pattern, percent_match, max_errors, ignore_case=case_insensitive)
+            if len(matches) > 0:
+                return n
+        return 0
 
     def get_lines_containing_string(
         self,
@@ -367,6 +386,10 @@ class String:
             matches = lambda line: fnmatchcase(line.casefold(), pattern)
         else:
             matches = lambda line: fnmatchcase(line, pattern)
+        return self._get_matching_lines(string, matches)
+
+    def get_lines_matching_fuzzy(self, string, pattern, percent_match=None, max_errors=None, case_insensitive=False):
+        matches = lambda line: len(fuzzy.fuzzy_find(line.lower(), pattern.lower(), percent_match, max_errors, ignore_case=case_insensitive)) > 0
         return self._get_matching_lines(string, matches)
 
     def get_lines_matching_regexp(
