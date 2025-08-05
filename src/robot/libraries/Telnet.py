@@ -1008,7 +1008,7 @@ class TelnetConnection(telnetlib.Telnet):
     def _read_until_fuzzy(self, expected, percent_match=None, max_errors=None):
         self._verify_connection()
         if self._terminal_emulator:
-            return self._terminal_read_until_fuzzy(expected)
+            return self._terminal_read_until_fuzzy(expected, percent_match, max_errors)
         expected = self._encode(expected)
         output = telnetlib.Telnet.read_until_fuzzy(self, expected, self._timeout, percent_match, max_errors)
         found = fuzzy.fuzzy_find(output, expected, percent_match, max_errors) is not None
