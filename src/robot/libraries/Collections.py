@@ -20,7 +20,7 @@ from itertools import chain
 from robot.api import logger
 from robot.utils import (
     is_dict_like, is_list_like, Matcher, NotSet, plural_or_not as s, seq2str, seq2str2,
-    type_name
+    type_name, fuzzy
 )
 from robot.utils.asserts import assert_equal
 from robot.version import get_version
@@ -261,6 +261,30 @@ class _List:
         list_ = self.get_slice_from_list(list_, start, end)
         try:
             return start + list_.index(value)
+        except ValueError:
+            return -1
+    
+    def get_index_from_list_fuzzy(self, list_, value, start=0, end=None, percent_match=None, max_errors=None):
+        """Returns the index of the first occurrence of the ``value`` on the list.
+
+        The search can be narrowed to the selected sublist by the ``start`` and
+        ``end`` indexes having the same semantics as with `Get Slice From List`
+        keyword. In case the value is not found, -1 is returned. The given list
+        is never altered by this keyword.
+
+        Example:
+        | ${x} = | Get Index From List | ${L5} | d |
+        =>
+        | ${x} = 3
+        | ${L5} is not changed
+        """
+        self._validate_list(list_)
+        start = self._index_to_int(start, empty_to_zero=True)
+        list_ = self.get_slice_from_list(list_, start, end)
+        try:
+            for idx, item in enumerate(list_):
+                if fuzzy.fuzzy_find(item, value, percent_match, max_errors):
+                    return start + idx
         except ValueError:
             return -1
 
