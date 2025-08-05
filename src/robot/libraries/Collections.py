@@ -345,6 +345,22 @@ class _List:
             msg,
         )
 
+    def list_should_contain_value_fuzzy(self, list_, value, msg=None, ignore_case=False, percent_match=None, max_errors=None):
+        self._validate_list(list_)
+        normalize = Normalizer(ignore_case).normalize
+        v = normalize(value)
+        l = normalize(list_)
+        found = False
+        for item in l:
+            if fuzzy.fuzzy_find(item, v, percent_match, max_errors) is not None:
+                found=True
+                break
+        _verify_condition(
+            found,
+            f"{seq2str2(list_)} does not contain value '{value}'.",
+            msg,
+        )
+
     def list_should_not_contain_value(self, list_, value, msg=None, ignore_case=False):
         """Fails if the ``value`` is found from ``list``.
 
@@ -358,6 +374,22 @@ class _List:
         normalize = Normalizer(ignore_case).normalize
         _verify_condition(
             normalize(value) not in normalize(list_),
+            f"{seq2str2(list_)} contains value '{value}'.",
+            msg,
+        )
+    
+    def list_should_not_contain_value_fuzzy(self, list_, value, msg=None, ignore_case=False, percent_match=None, max_errors=None):
+        self._validate_list(list_)
+        normalize = Normalizer(ignore_case).normalize
+        v = normalize(value)
+        l = normalize(list_)
+        found = False
+        for item in l:
+            if fuzzy.fuzzy_find(item, v, percent_match, max_errors):
+                found=True
+                break
+        _verify_condition(
+            not found,
             f"{seq2str2(list_)} contains value '{value}'.",
             msg,
         )
