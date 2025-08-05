@@ -363,7 +363,7 @@ class Telnet:
             excluded = [
                 name
                 for name in dir(telnetlib.Telnet())
-                if name not in ["write", "read", "read_until"]
+                if name not in ["write", "read", "read_until", "read_until_fuzzy"]
             ]
             self._conn_kws = self._get_keywords(conn, excluded)
         return self._conn_kws
