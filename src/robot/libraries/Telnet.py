@@ -985,20 +985,8 @@ class TelnetConnection(telnetlib.Telnet):
             raise NoMatchError(expected, self._timeout, output)
         return output
     
+    @keyword
     def read_until_fuzzy(self, expected, percent_match=None, max_errors=None, loglevel=None):
-        """Reads output until ``expected`` text is matched using fuzzy comparison.
-
-        Text up to and including the match is returned and logged. If no match
-        is found, this keyword fails. How much to wait for the output depends
-        on the [#Configuration|configured timeout].
-
-        Set `percent_match` to match strings where `percent_match` of characters are correct
-        Set `max_errors` to match strings, which differ at a maximum of `max_errors` characters
-        `max_errors` overrides `percent_match` when both are set.
-
-        See `Logging` section for more information about log levels. Use
-        `Read Until Regexp` if more complex matching is needed.
-        """
         success, output = self._read_until_fuzzy(expected, percent_match, max_errors)
         self._log(output, loglevel)
         if not success:
