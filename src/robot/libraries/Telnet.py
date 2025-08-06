@@ -345,9 +345,13 @@ class Telnet:
         return self._lib_kws
 
     def _get_keywords(self, source, excluded):
-        return [
+        logger.warn(dir(source))
+        logger.warn(excluded)
+        kwds = [
             name for name in dir(source) if self._is_keyword(name, source, excluded)
         ]
+        logger.warn(kwds)
+        return kwds
 
     def _is_keyword(self, name, source, excluded):
         return (
