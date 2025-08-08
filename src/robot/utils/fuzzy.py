@@ -1,5 +1,6 @@
 
 import fuzzysearch
+from robot.api import logger
 
 def fuzzy_find(buffer, expected, percent_match=None, max_errors=None, max_insertions:int=None, max_deletions:int=None, ignore_case=False):
     found = fuzzy_find_all(buffer, expected, percent_match, max_errors, max_insertions, max_deletions, ignore_case)
@@ -25,12 +26,17 @@ def fuzzy_find_all(buffer, expected, percent_match:float=None, max_errors:int=No
     else:
         max_l_dist = None
     
-
-    if ignore_case:
-        matches = fuzzysearch.find_near_matches(expected.lower(), buffer.lower(), max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
-        # change matched to contain original, possibly uppercase, input
-        for match in matches:
-            match.matched = buffer[match.start:match.end]
-    else:
-        matches = fuzzysearch.find_near_matches(expected, buffer, max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
+    try:
+        if ignore_case:
+            matches = fuzzysearch.find_near_matches(expected.lower(), buffer.lower(), max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
+            # change matched to contain original, possibly uppercase, input
+            for match in matches:
+                match.matched = buffer[match.start:match.end]
+        else:
+            matches = fuzzysearch.find_near_matches(expected, buffer, max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
+    except Exception as e:
+        logger.error(e)
+        logger.error("\n\n\nbuffer:")
+        logger.error(buffer)
+        logger.error("\n\n\nexpected:")
     return matches
