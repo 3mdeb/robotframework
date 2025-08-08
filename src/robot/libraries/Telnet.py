@@ -990,20 +990,20 @@ class TelnetConnection(telnetlib.Telnet):
         return output
     
     @keyword
-    def read_until_fuzzy(self, expected, percent_match=None, max_errors=None, loglevel=None):
-        success, output = self._read_until_fuzzy(expected, percent_match, max_errors)
+    def read_until_fuzzy(self, expected, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None, loglevel=None):
+        success, output = self._read_until_fuzzy(expected, percent_match, max_errors, max_insertions, max_deletions)
         self._log(output, loglevel)
         if not success:
             raise NoMatchError(expected, self._timeout, output)
         return output
 
-    def _read_until_fuzzy(self, expected, percent_match=None, max_errors=None):
+    def _read_until_fuzzy(self, expected, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
         self._verify_connection()
         if self._terminal_emulator:
-            return self._terminal_read_until_fuzzy(expected, percent_match, max_errors)
+            return self._terminal_read_until_fuzzy(expected, percent_match, max_errors, max_insertions, max_deletions)
         expected = self._encode(expected)
-        output = telnetlib.Telnet.read_until_fuzzy(self, expected, self._timeout, percent_match, max_errors)
-        found = fuzzy.fuzzy_find(output, expected, percent_match, max_errors) is not None
+        output = telnetlib.Telnet.read_until_fuzzy(self, expected, self._timeout, percent_match, max_errors, max_insertions, max_deletions)
+        found = fuzzy.fuzzy_find(output, expected, percent_match, max_errors, max_insertions, max_deletions) is not None
         return found, self._decode(output)
     
     def _read_until(self, expected):
@@ -1033,16 +1033,16 @@ class TelnetConnection(telnetlib.Telnet):
                 return True, output
         return False, self._terminal_emulator.read()
     
-    def _terminal_read_until_fuzzy(self, expected, percent_match=None, max_errors=None):
+    def _terminal_read_until_fuzzy(self, expected, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
         max_time = time.time() + self._timeout
-        output = self._terminal_emulator.read_until_fuzzy(expected, percent_match, max_errors)
+        output = self._terminal_emulator.read_until_fuzzy(expected, percent_match, max_errors, max_insertions, max_deletions)
         if output:
             return True, output
         while time.time() < max_time:
             output = telnetlib.Telnet.read_until_fuzzy(self, self._encode(expected),
-                                                 self._terminal_frequency, percent_match, max_errors)
+                                                 self._terminal_frequency, percent_match, max_errors, max_insertions, max_deletions)
             self._terminal_emulator.feed(self._decode(output))
-            output = self._terminal_emulator.read_until_fuzzy(expected, percent_match, max_errors)
+            output = self._terminal_emulator.read_until_fuzzy(expected, percent_match, max_errors, max_insertions, max_deletions)
             if output:
                 return True, output
         return False, self._terminal_emulator.read()
@@ -1348,10 +1348,10 @@ class TerminalEmulator:
             return current_out[: exp_index + len(expected)]
         return None
 
-    def read_until_fuzzy(self, expected, percent_match=None, max_errors=None):
+    def read_until_fuzzy(self, expected, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
         current_out = self.current_output
 
-        match = fuzzy.fuzzy_find(current_out, expected, percent_match, max_errors)
+        match = fuzzy.fuzzy_find(current_out, expected, percent_match, max_errors, max_insertions, max_deletions)
         if match is None:
             return None
         
