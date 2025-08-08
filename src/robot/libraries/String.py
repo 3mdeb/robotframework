@@ -290,7 +290,7 @@ class String:
         return ret
     
     def get_line_number_containing_string_fuzzy(self, string, pattern, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None, case_insensitive=False):
-        """Returns line number of the given ``string`` that contain the ``pattern``.
+        """Returns line number of the given ``string`` that contain the ``pattern``.`
         The ``pattern`` is always considered to be a normal string, not a glob
         or regexp pattern. A line matches if the ``pattern`` is found anywhere
         on it.
