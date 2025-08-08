@@ -289,7 +289,7 @@ class String:
                 ret = 0
         return ret
     
-    def get_line_number_containing_string_fuzzy(self, string, pattern, percent_match=None, max_errors=None, case_insensitive=False):
+    def get_line_number_containing_string_fuzzy(self, string, pattern, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None, case_insensitive=False):
         """Returns line number of the given ``string`` that contain the ``pattern``.
         The ``pattern`` is always considered to be a normal string, not a glob
         or regexp pattern. A line matches if the ``pattern`` is found anywhere
@@ -302,7 +302,7 @@ class String:
         If multiple line match only line number of first occurrence is returned.
         """
         for n,l in enumerate(string.splitlines()):
-            matches = fuzzy.fuzzy_find(l, pattern, percent_match, max_errors, ignore_case=case_insensitive)
+            matches = fuzzy.fuzzy_find(l, pattern, percent_match, max_errors, max_insertions, max_deletions, ignore_case=case_insensitive)
             if len(matches) > 0:
                 return n
         return 0
@@ -388,8 +388,8 @@ class String:
             matches = lambda line: fnmatchcase(line, pattern)
         return self._get_matching_lines(string, matches)
 
-    def get_lines_matching_fuzzy(self, string, pattern, percent_match=None, max_errors=None, case_insensitive=False):
-        matches = lambda line: len(fuzzy.fuzzy_find(line.lower(), pattern.lower(), percent_match, max_errors, ignore_case=case_insensitive)) > 0
+    def get_lines_matching_fuzzy(self, string, pattern, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None, case_insensitive=False):
+        matches = lambda line: len(fuzzy.fuzzy_find(line.lower(), pattern.lower(), percent_match, max_errors, max_insertions, max_deletions, ignore_case=case_insensitive)) > 0
         return self._get_matching_lines(string, matches)
 
     def get_lines_matching_regexp(
