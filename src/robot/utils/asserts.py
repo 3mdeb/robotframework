@@ -180,15 +180,15 @@ def assert_equal(first, second, msg=None, values=True, formatter=safe_str):
     if not first == second:  # noqa: SIM201
         _report_inequality(first, second, "!=", msg, values, formatter)
 
-def assert_equal_fuzzy(first, second, msg=None, values=True, formatter=safe_str, percent_match=90, max_errors=None):
+def assert_equal_fuzzy(first, second, msg=None, values=True, formatter=safe_str, percent_match=90, max_errors=None, max_insertions=None, max_deletions=None):
     """Fail if given objects are unequal as determined by fuzzy comparison. Default is 90% similarity."""
-    match = fuzzy._fuzzy_find(first, second, percent_match, max_errors)
+    match = fuzzy._fuzzy_find(first, second, percent_match, max_errors, max_insertions, max_deletions)
     if not len(match) > 0:
         _report_inequality(first, second, '!=', msg, values, formatter)
 
-def assert_not_equal_fuzzy(first, second, msg=None, values=True, formatter=safe_str, percent_match=90, max_errors=None):
+def assert_not_equal_fuzzy(first, second, msg=None, values=True, formatter=safe_str, percent_match=90, max_errors=None, max_insertions=None, max_deletions=None):
     """Fail if given objects are equal as determined by fuzzy comparison. Default is 90% similarity."""
-    match = fuzzy._fuzzy_find(first, second, percent_match, max_errors)
+    match = fuzzy._fuzzy_find(first, second, percent_match, max_errors, max_insertions, max_deletions)
     if len(match) > 0:
         _report_inequality(first, second, '!=', msg, values, formatter)
 
