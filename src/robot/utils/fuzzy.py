@@ -26,6 +26,11 @@ def fuzzy_find_all(buffer, expected, percent_match:float=None, max_errors:int=No
     else:
         max_l_dist = None
     
+    print("percent_match: ", percent_match, ": ", type(percent_match))
+    print("max_errors: ", max_errors, ": ", type(max_errors))
+    print("max_insertions: ", max_insertions, ": ", type(max_insertions))
+    print("max_deletions: ", max_deletions, ": ", type(max_deletions))
+    print("ignore_case: ", ignore_case, ": ", type(ignore_case))
     try:
         if ignore_case:
             matches = fuzzysearch.find_near_matches(expected.lower(), buffer.lower(), max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
@@ -34,9 +39,10 @@ def fuzzy_find_all(buffer, expected, percent_match:float=None, max_errors:int=No
                 match.matched = buffer[match.start:match.end]
         else:
             matches = fuzzysearch.find_near_matches(expected, buffer, max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
+        return matches
     except Exception as e:
         logger.error(e)
         logger.error("\n\n\nbuffer:")
         logger.error(buffer)
         logger.error("\n\n\nexpected:")
-    return matches
+    
