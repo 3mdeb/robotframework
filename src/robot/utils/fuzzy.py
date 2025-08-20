@@ -42,24 +42,24 @@ def fuzzy_find_all(buffer, expected, percent_match:float=None, max_errors:int=No
         except:
             logger.warn(f"percent_match parameter invalid: {percent_match}:{type(percent_match)}")
             percent_match=None
-    
-    print("percent_match: ", percent_match, ": ", type(percent_match))
-    print("max_errors: ", max_errors, ": ", type(max_errors))
-    print("max_insertions: ", max_insertions, ": ", type(max_insertions))
-    print("max_deletions: ", max_deletions, ": ", type(max_deletions))
-    print("ignore_case: ", ignore_case, ": ", type(ignore_case))
     try:
         if ignore_case:
-            matches = fuzzysearch.find_near_matches(expected.lower(), buffer.lower(), max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
+            matches = fuzzysearch.find_near_matches(subsequence=expected.lower(), sequence=buffer.lower(), max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=0)
             # change matched to contain original, possibly uppercase, input
             for match in matches:
                 match.matched = buffer[match.start:match.end]
         else:
-            matches = fuzzysearch.find_near_matches(expected, buffer, max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions)
+            matches = fuzzysearch.find_near_matches(subsequence=expected, sequence=buffer, max_l_dist=max_l_dist, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=0)
         return matches
     except Exception as e:
         logger.error(e)
+        logger.error("percent_match: ", percent_match, ": ", type(percent_match))
+        logger.error("max_errors: ", max_errors, ": ", type(max_errors))
+        logger.error("max_insertions: ", max_insertions, ": ", type(max_insertions))
+        logger.error("max_deletions: ", max_deletions, ": ", type(max_deletions))
+        logger.error("ignore_case: ", ignore_case, ": ", type(ignore_case))
+        logger.error("\n\n\nexpected:")
+        logger.error(expected)
         logger.error("\n\n\nbuffer:")
         logger.error(buffer)
-        logger.error("\n\n\nexpected:")
     
