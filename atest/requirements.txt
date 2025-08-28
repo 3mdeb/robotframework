@@ -6,5 +6,6 @@ pyyaml
 lxml
 pillow >= 7.1.0; platform_system == 'Windows'
 telnetlib-313-and-up; python_version >= '3.13'
+fuzzysearch==0.8.0
 
 -r ../utest/requirements.txt
