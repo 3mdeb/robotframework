@@ -105,9 +105,9 @@ class _BuiltInBase:
         # Must use this instead of fnmatch when string may contain newlines.
         matcher = Matcher(pattern, caseless=caseless, spaceless=False)
         return matcher.match(string)
-    
-    def _matches_fuzzy(self, string, pattern, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None, caseless=False):
-        matches = fuzzy.fuzzy_find(string, pattern, percent_match, max_errors, max_insertions, max_deletions)
+
+    def _matches_fuzzy(self, string, pattern, max_substitutions=None, max_insertions=None, max_deletions=None, caseless=False):
+        matches = fuzzy.fuzzy_find(string, pattern, max_substitutions, max_insertions, max_deletions)
         return matches is not None
 
     def _is_true(self, condition):
@@ -709,10 +709,10 @@ class _Verify(_BuiltInBase):
         if include_values and isinstance(first, str) and isinstance(second, str):
             self._raise_multi_diff(first, second, msg, formatter)
         assert_equal(first, second, msg, include_values, formatter)
-    
+
     def should_be_equal_fuzzy(self, first, second, msg=None, values=True,
                         ignore_case=False, formatter='str', strip_spaces=False,
-                        collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                        collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         self._log_types_at_info_if_different(first, second)
         if isinstance(first, str) and isinstance(second, str):
             if ignore_case:
@@ -724,16 +724,16 @@ class _Verify(_BuiltInBase):
             if collapse_spaces:
                 first = self._collapse_spaces(first)
                 second = self._collapse_spaces(second)
-        self._should_be_equal_fuzzy(first, second, msg, values, formatter, percent_match, max_errors, max_insertions, max_deletions)
+        self._should_be_equal_fuzzy(first, second, msg, values, formatter, max_substitutions, max_insertions, max_deletions)
 
-    def _should_be_equal_fuzzy(self, first, second, msg, values, formatter='str', percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+    def _should_be_equal_fuzzy(self, first, second, msg, values, formatter='str', max_substitutions=None, max_insertions=None, max_deletions=None):
         include_values = self._include_values(values)
         formatter = self._get_formatter(formatter)
         if first == second:
             return
         if include_values and isinstance(first, str) and isinstance(second, safe_str):
             self._raise_multi_diff(first, second, msg, formatter)
-        assert_equal_fuzzy(first, second, msg, include_values, formatter, percent_match, max_errors, max_insertions, max_deletions)
+        assert_equal_fuzzy(first, second, msg, include_values, formatter, max_substitutions, max_insertions, max_deletions)
 
     def _log_types_at_info_if_different(self, first, second):
         level = "DEBUG" if type(first) is type(second) else "INFO"
@@ -823,7 +823,7 @@ class _Verify(_BuiltInBase):
 
     def should_not_be_equal_fuzzy(self, first, second, msg=None, values=True,
                             ignore_case=False, strip_spaces=False,
-                            collapse_spaces=False, match_percent=None, max_errors=None, max_insertions=None, max_deletions=None):
+                            collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         self._log_types_at_info_if_different(first, second)
         if isinstance(first, str) and isinstance(second, str):
             if ignore_case:
@@ -835,13 +835,13 @@ class _Verify(_BuiltInBase):
             if collapse_spaces:
                 first = self._collapse_spaces(first)
                 second = self._collapse_spaces(second)
-        self._should_not_be_equal_fuzzy(first, second, msg, values, match_percent, max_errors, max_insertions, max_deletions)
+        self._should_not_be_equal_fuzzy(first, second, msg, values, max_substitutions, max_insertions, max_deletions)
 
     def _should_not_be_equal(self, first, second, msg, values):
         assert_not_equal(first, second, msg, self._include_values(values))
 
-    def _should_not_be_equal_fuzzy(self, first, second, msg, values, match_percent, max_errors, max_insertions=None, max_deletions=None):
-        assert_not_equal_fuzzy(first, second, msg, self._include_values(values), match_percent, max_errors, max_insertions, max_deletions)
+    def _should_not_be_equal_fuzzy(self, first, second, msg, values, max_substitutions, max_insertions=None, max_deletions=None):
+        assert_not_equal_fuzzy(first, second, msg, self._include_values(values), max_substitutions, max_insertions, max_deletions)
 
     def should_not_be_equal_as_integers(
         self,
@@ -1015,7 +1015,7 @@ class _Verify(_BuiltInBase):
 
     def should_not_be_equal_as_strings_fuzzy(self, first, second, msg=None, values=True,
                                        ignore_case=False, strip_spaces=False,
-                                       collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                                       collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         self._log_types_at_info_if_different(first, second)
         first = safe_str(first)
         second = safe_str(second)
@@ -1028,7 +1028,7 @@ class _Verify(_BuiltInBase):
         if collapse_spaces:
             first = self._collapse_spaces(first)
             second = self._collapse_spaces(second)
-        self._should_not_be_equal_fuzzy(first, second, msg, values, percent_match, max_errors, max_insertions, max_deletions)
+        self._should_not_be_equal_fuzzy(first, second, msg, values, max_substitutions, max_insertions, max_deletions)
 
     def should_be_equal_as_strings(
         self,
@@ -1078,10 +1078,10 @@ class _Verify(_BuiltInBase):
             first = self._collapse_spaces(first)
             second = self._collapse_spaces(second)
         self._should_be_equal(first, second, msg, values, formatter)
-    
+
     def should_be_equal_as_strings_fuzzy(self, first, second, msg=None, values=True,
                                    ignore_case=False, strip_spaces=False,
-                                   formatter='str', collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                                   formatter='str', collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         self._log_types_at_info_if_different(first, second)
         first = safe_str(first)
         second = safe_str(second)
@@ -1094,7 +1094,7 @@ class _Verify(_BuiltInBase):
         if collapse_spaces:
             first = self._collapse_spaces(first)
             second = self._collapse_spaces(second)
-        self._should_be_equal_fuzzy(first, second, msg, values, formatter, percent_match, max_errors, max_insertions, max_deletions)
+        self._should_be_equal_fuzzy(first, second, msg, values, formatter, max_substitutions, max_insertions, max_deletions)
 
     def should_not_start_with(
         self,
@@ -1128,7 +1128,7 @@ class _Verify(_BuiltInBase):
 
     def should_not_start_with_fuzzy(self, str1, str2, msg=None, values=True,
                               ignore_case=False, strip_spaces=False,
-                              collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                              collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         if ignore_case:
             str1 = str1.lower()
             str2 = str2.lower()
@@ -1138,7 +1138,7 @@ class _Verify(_BuiltInBase):
         if collapse_spaces:
             str1 = self._collapse_spaces(str1)
             str2 = self._collapse_spaces(str2)
-        matched = fuzzy.fuzzy_find(str1, str2, percent_match, max_errors, max_insertions, max_deletions)
+        matched = fuzzy.fuzzy_find(str1, str2, max_substitutions, max_insertions, max_deletions)
         if matched is not None:
             if matched.start < 1:
                  raise AssertionError(self._get_string_msg(str1, str2, msg, values,
@@ -1177,7 +1177,7 @@ class _Verify(_BuiltInBase):
 
     def should_start_with_fuzzy(self, str1, str2, msg=None, values=True,
                                 ignore_case=False, strip_spaces=False,
-                                collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                                collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         if ignore_case:
             str1 = str1.lower()
             str2 = str2.lower()
@@ -1187,7 +1187,7 @@ class _Verify(_BuiltInBase):
         if collapse_spaces:
             str1 = self._collapse_spaces(str1)
             str2 = self._collapse_spaces(str2)
-        matched = fuzzy.fuzzy_find(str1, str2, percent_match, max_errors, max_insertions, max_deletions)
+        matched = fuzzy.fuzzy_find(str1, str2, max_substitutions, max_insertions, max_deletions)
         if matched is None:
             if matched.start < 1:
                     raise AssertionError(self._get_string_msg(str1, str2, msg, values,
@@ -1226,7 +1226,7 @@ class _Verify(_BuiltInBase):
 
     def should_not_end_with_fuzzy(self, str1, str2, msg=None, values=True,
                                 ignore_case=False, strip_spaces=False,
-                                collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                                collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         if ignore_case:
             str1 = str1.lower()
             str2 = str2.lower()
@@ -1236,7 +1236,7 @@ class _Verify(_BuiltInBase):
         if collapse_spaces:
             str1 = self._collapse_spaces(str1)
             str2 = self._collapse_spaces(str2)
-        matched = fuzzy.fuzzy_find(str1, str2, percent_match, max_errors, max_insertions, max_deletions)
+        matched = fuzzy.fuzzy_find(str1, str2, max_substitutions, max_insertions, max_deletions)
         if matched is None:
             if matched.end == len(str1):
                     raise AssertionError(self._get_string_msg(str1, str2, msg, values,
@@ -1275,7 +1275,7 @@ class _Verify(_BuiltInBase):
 
     def should_end_with_fuzzy(self, str1, str2, msg=None, values=True,
                                 ignore_case=False, strip_spaces=False,
-                                collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                                collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         if ignore_case:
             str1 = str1.lower()
             str2 = str2.lower()
@@ -1285,12 +1285,12 @@ class _Verify(_BuiltInBase):
         if collapse_spaces:
             str1 = self._collapse_spaces(str1)
             str2 = self._collapse_spaces(str2)
-        matched = fuzzy.fuzzy_find(str1, str2, percent_match, max_errors, max_insertions, max_deletions)
+        matched = fuzzy.fuzzy_find(str1, str2, max_substitutions, max_insertions, max_deletions)
         if matched is None:
             if matched.end != len(str1):
                     raise AssertionError(self._get_string_msg(str1, str2, msg, values,
                                                         'does not end with'))
-            
+
     def should_not_contain(
         self,
         container,
@@ -1360,7 +1360,7 @@ class _Verify(_BuiltInBase):
 
     def should_not_contain_fuzzy(self, container, item, msg=None, values=True,
                            ignore_case=False, strip_spaces=False,
-                           collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                           collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         orig_container = container
         if ignore_case and isinstance(item, str):
             item = item.lower()
@@ -1380,7 +1380,7 @@ class _Verify(_BuiltInBase):
                 container = self._collapse_spaces(container)
             elif is_list_like(container):
                 container = set(self._collapse_spaces(x) for x in container)
-        matched = fuzzy.fuzzy_find(container, item, percent_match, max_errors, max_insertions, max_deletions)
+        matched = fuzzy.fuzzy_find(container, item, max_substitutions, max_insertions, max_deletions)
         if matched is not None:
             raise AssertionError(self._get_string_msg(orig_container, item, msg,
                                                       values, 'contains'))
@@ -1473,7 +1473,7 @@ class _Verify(_BuiltInBase):
 
     def should_contain_fuzzy(self, container, item, msg=None, values=True,
                            ignore_case=False, strip_spaces=False,
-                           collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                           collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         orig_container = container
         if ignore_case and isinstance(item, str):
             item = item.lower()
@@ -1493,7 +1493,7 @@ class _Verify(_BuiltInBase):
                 container = self._collapse_spaces(container)
             elif is_list_like(container):
                 container = set(self._collapse_spaces(x) for x in container)
-        matched = fuzzy.fuzzy_find(container, item, percent_match, max_errors, max_insertions, max_deletions)
+        matched = fuzzy.fuzzy_find(container, item, max_substitutions, max_insertions, max_deletions)
         if matched is None:
             raise AssertionError(self._get_string_msg(orig_container, item, msg,
                                                       values, 'does not contain'))
@@ -1565,8 +1565,7 @@ class _Verify(_BuiltInBase):
         values = configuration.pop('values', True)
         ignore_case = is_truthy(configuration.pop('ignore_case', False))
         strip_spaces = configuration.pop('strip_spaces', False)
-        percent_match = configuration.pop('percent_match', None)
-        max_errors = configuration.pop('max_errors', None)
+        max_substitutions = configuration.pop('max_substitutions', None)
         max_insertions = configuration.pop('max_insertions', None)
         max_deletions = configuration.pop('max_deletions', None)
         collapse_spaces = is_truthy(configuration.pop('collapse_spaces', False))
@@ -1596,10 +1595,10 @@ class _Verify(_BuiltInBase):
                 container = set(self._collapse_spaces(x) for x in container)
 
         for item in items:
-            matched = fuzzy.fuzzy_find(container, item, percent_match, max_errors, max_insertions, max_deletions)
+            matched = fuzzy.fuzzy_find(container, item, max_substitutions, max_insertions, max_deletions)
             if matched is not None:
                 return
-        
+
         msg = self._get_string_msg(orig_container,
                                     seq2str(items, lastsep=' or '),
                                     msg, values,
@@ -1674,8 +1673,7 @@ class _Verify(_BuiltInBase):
         values = configuration.pop('values', True)
         ignore_case = is_truthy(configuration.pop('ignore_case', False))
         strip_spaces = configuration.pop('strip_spaces', False)
-        percent_match = configuration.pop('percent_match', None)
-        max_errors = configuration.pop('max_errors', None)
+        max_substitutions = configuration.pop('max_substitutions', None)
         max_insertions = configuration.pop('max_insertions', None)
         max_deletions = configuration.pop('max_deletions', None)
         collapse_spaces = is_truthy(configuration.pop('collapse_spaces', False))
@@ -1705,7 +1703,7 @@ class _Verify(_BuiltInBase):
                 container = set(self._collapse_spaces(x) for x in container)
 
         for item in items:
-            matched = fuzzy.fuzzy_find(container, item, percent_match, max_errors, max_insertions, max_deletions)
+            matched = fuzzy.fuzzy_find(container, item, max_substitutions, max_insertions, max_deletions)
             if matched is not None:
                 msg = self._get_string_msg(orig_container,
                                             seq2str(items, lastsep=' or '),
@@ -1785,7 +1783,7 @@ class _Verify(_BuiltInBase):
 
     def should_contain_x_times_fuzzy(self, container, item, count, msg=None,
                                ignore_case=False, strip_spaces=False,
-                               collapse_spaces=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+                               collapse_spaces=False, max_substitutions=None, max_insertions=None, max_deletions=None):
         count = self._convert_to_integer(count)
         orig_container = container
         if isinstance(item, str):
@@ -1807,7 +1805,7 @@ class _Verify(_BuiltInBase):
                     container = self._collapse_spaces(container)
                 elif is_list_like(container):
                     container = [self._collapse_spaces(x) for x in container]
-        matches = fuzzy.fuzzy_find_all(container, item, percent_match, max_errors, max_insertions, max_deletions)
+        matches = fuzzy.fuzzy_find_all(container, item, max_substitutions, max_insertions, max_deletions)
         x = len(matches)
         if not msg:
             msg = "%r contains '%s' %d time%s, not %d time%s." \
@@ -1835,14 +1833,14 @@ class _Verify(_BuiltInBase):
         self.log(f"Item found from container {count} time{s(count)}.")
         return count
 
-    def get_count_fuzzy(self, container, item, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
+    def get_count_fuzzy(self, container, item, max_substitutions=None, max_insertions=None, max_deletions=None):
         if not hasattr(container, 'count'):
             try:
                 container = list(container)
             except:
                 raise RuntimeError("Converting '%s' to list failed: %s"
                                    % (container, get_error_message()))
-        matches = fuzzy.fuzzy_find_all(container, item, percent_match, max_errors, max_insertions, max_deletions)
+        matches = fuzzy.fuzzy_find_all(container, item, max_substitutions, max_insertions, max_deletions)
         count = len(matches)
         self.log('Item found from container %d time%s.' % (count, s(count)))
         return count
@@ -1874,8 +1872,8 @@ class _Verify(_BuiltInBase):
             )
 
     def should_not_match_fuzzy(self, string, pattern, msg=None, values=True,
-                         ignore_case=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
-        matched = fuzzy.fuzzy_find(string, pattern, percent_match, max_errors, max_insertions, max_deletions)
+                         ignore_case=False, max_substitutions=None, max_insertions=None, max_deletions=None):
+        matched = fuzzy.fuzzy_find(string, pattern, max_substitutions, max_insertions, max_deletions)
         if matched is not None:
             raise AssertionError(self._get_string_msg(string, pattern, msg,
                                                       values, 'matches'))
@@ -1900,8 +1898,8 @@ class _Verify(_BuiltInBase):
             )
 
     def should_match_fuzzy(self, string, pattern, msg=None, values=True,
-                         ignore_case=False, percent_match=None, max_errors=None, max_insertions=None, max_deletions=None):
-        matched = fuzzy.fuzzy_find(string, pattern, percent_match, max_errors, max_insertions, max_deletions)
+                         ignore_case=False, max_substitutions=None, max_insertions=None, max_deletions=None):
+        matched = fuzzy.fuzzy_find(string, pattern, max_substitutions, max_insertions, max_deletions)
         if matched is None:
             raise AssertionError(self._get_string_msg(string, pattern, msg,
                                                       values, 'matches'))
