@@ -97,6 +97,7 @@ Example output::
 from .robottypes import type_name
 from .unic import safe_str
 
+import robot.utils.fuzzy as fuzzy
 
 def fail(msg=None):
     """Fail test immediately with the given message."""
@@ -178,6 +179,19 @@ def assert_equal(first, second, msg=None, values=True, formatter=safe_str):
     """Fail if given objects are unequal as determined by the '==' operator."""
     if not first == second:  # noqa: SIM201
         _report_inequality(first, second, "!=", msg, values, formatter)
+
+def assert_equal_fuzzy(first, second, msg=None, values=True, formatter=safe_str, max_substitutions=None, max_insertions=None, max_deletions=None):
+    """Fail if given objects are unequal as determined by fuzzy comparison."""
+    match = fuzzy._fuzzy_find(first, second, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+    if not len(match) > 0:
+        _report_inequality(first, second, '!=', msg, values, formatter)
+
+def assert_not_equal_fuzzy(first, second, msg=None, values=True, formatter=safe_str, max_substitutions=None, max_insertions=None, max_deletions=None):
+    """Fail if given objects are equal as determined by fuzzy comparison."""
+    match = fuzzy._fuzzy_find(first, second, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+    if len(match) > 0:
+        _report_inequality(first, second, '!=', msg, values, formatter)
+
 
 
 def assert_not_equal(first, second, msg=None, values=True, formatter=safe_str):

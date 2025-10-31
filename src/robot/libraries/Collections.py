@@ -20,7 +20,7 @@ from itertools import chain
 from robot.api import logger
 from robot.utils import (
     is_dict_like, is_list_like, Matcher, NotSet, plural_or_not as s, seq2str, seq2str2,
-    type_name
+    type_name, fuzzy
 )
 from robot.utils.asserts import assert_equal
 from robot.version import get_version
@@ -264,6 +264,30 @@ class _List:
         except ValueError:
             return -1
 
+    def get_index_from_list_fuzzy(self, list_, value, start=0, end=None, max_substitutions=None, max_insertions=None, max_deletions=None):
+        """Returns the index of the first occurrence of the ``value`` on the list.
+
+        The search can be narrowed to the selected sublist by the ``start`` and
+        ``end`` indexes having the same semantics as with `Get Slice From List`
+        keyword. In case the value is not found, -1 is returned. The given list
+        is never altered by this keyword.
+
+        Example:
+        | ${x} = | Get Index From List | ${L5} | d |
+        =>
+        | ${x} = 3
+        | ${L5} is not changed
+        """
+        self._validate_list(list_)
+        start = self._index_to_int(start, empty_to_zero=True)
+        list_ = self.get_slice_from_list(list_, start, end)
+        try:
+            for idx, item in enumerate(list_):
+                if fuzzy.fuzzy_find(item, value, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions):
+                    return start + idx
+        except ValueError:
+            return -1
+
     def copy_list(self, list_, deepcopy=False):
         """Returns a copy of the given list.
 
@@ -321,6 +345,22 @@ class _List:
             msg,
         )
 
+    def list_should_contain_value_fuzzy(self, list_, value, msg=None, ignore_case=False, max_insertions=None, max_deletions=None, max_substitutions=None):
+        self._validate_list(list_)
+        normalize = Normalizer(ignore_case).normalize
+        v = normalize(value)
+        l = normalize(list_)
+        found = False
+        for item in l:
+            if fuzzy.fuzzy_find(item, v, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions) is not None:
+                found=True
+                break
+        _verify_condition(
+            found,
+            f"{seq2str2(list_)} does not contain value '{value}'.",
+            msg,
+        )
+
     def list_should_not_contain_value(self, list_, value, msg=None, ignore_case=False):
         """Fails if the ``value`` is found from ``list``.
 
@@ -334,6 +374,22 @@ class _List:
         normalize = Normalizer(ignore_case).normalize
         _verify_condition(
             normalize(value) not in normalize(list_),
+            f"{seq2str2(list_)} contains value '{value}'.",
+            msg,
+        )
+
+    def list_should_not_contain_value_fuzzy(self, list_, value, msg=None, ignore_case=False, max_insertions=None, max_deletions=None, max_substitutions=None):
+        self._validate_list(list_)
+        normalize = Normalizer(ignore_case).normalize
+        v = normalize(value)
+        l = normalize(list_)
+        found = False
+        for item in l:
+            if fuzzy.fuzzy_find(item, v, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions):
+                found=True
+                break
+        _verify_condition(
+            not found,
             f"{seq2str2(list_)} contains value '{value}'.",
             msg,
         )

@@ -21,6 +21,7 @@ import telnetlib
 import time
 from contextlib import contextmanager
 
+import robot.utils.fuzzy as fuzzy
 try:
     import pyte
 except ImportError:
@@ -344,9 +345,10 @@ class Telnet:
         return self._lib_kws
 
     def _get_keywords(self, source, excluded):
-        return [
+        kwds = [
             name for name in dir(source) if self._is_keyword(name, source, excluded)
         ]
+        return kwds
 
     def _is_keyword(self, name, source, excluded):
         return (
@@ -362,7 +364,7 @@ class Telnet:
             excluded = [
                 name
                 for name in dir(telnetlib.Telnet())
-                if name not in ["write", "read", "read_until"]
+                if name not in ["write", "read", "read_until", "read_until_fuzzy"]
             ]
             self._conn_kws = self._get_keywords(conn, excluded)
         return self._conn_kws
@@ -856,14 +858,14 @@ class TelnetConnection(telnetlib.Telnet):
 
     def write_bare(self, text, char_delay=None):
         """Writes the given text, and nothing else, into the connection.
-        
+
         If char_delay parameter specified function sends characters one by one
         with delay defined in seconds.
-        
+
         This keyword does not append a newline nor consume the written text.
         Use `Write` if these features are needed.
         """
-        
+
         self._verify_connection()
         if char_delay:
             for ch in list(text):
@@ -984,6 +986,23 @@ class TelnetConnection(telnetlib.Telnet):
             raise NoMatchError(expected, self._timeout, output)
         return output
 
+    @keyword
+    def read_until_fuzzy(self, expected, max_substitutions=None, max_insertions=None, max_deletions=None, loglevel=None):
+        success, output = self._read_until_fuzzy(expected, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+        self._log(output, loglevel)
+        if not success:
+            raise NoMatchError(expected, self._timeout, output)
+        return output
+
+    def _read_until_fuzzy(self, expected, max_substitutions=None, max_insertions=None, max_deletions=None):
+        self._verify_connection()
+        if self._terminal_emulator:
+            return self._terminal_read_until_fuzzy(expected, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+        expected = self._encode(expected)
+        output = telnetlib.Telnet.read_until_fuzzy(self, expected, self._timeout, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+        found = fuzzy.fuzzy_find(output, expected, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions) is not None
+        return found, self._decode(output)
+
     def _read_until(self, expected):
         self._verify_connection()
         if self._terminal_emulator:
@@ -1007,6 +1026,20 @@ class TelnetConnection(telnetlib.Telnet):
             )
             self._terminal_emulator.feed(self._decode(output))
             output = self._terminal_emulator.read_until(expected)
+            if output:
+                return True, output
+        return False, self._terminal_emulator.read()
+
+    def _terminal_read_until_fuzzy(self, expected, max_substitutions=None, max_insertions=None, max_deletions=None):
+        max_time = time.time() + self._timeout
+        output = self._terminal_emulator.read_until_fuzzy(expected, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+        if output:
+            return True, output
+        while time.time() < max_time:
+            output = telnetlib.Telnet.read_until_fuzzy(self, self._encode(expected),
+                                                 self._terminal_frequency, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+            self._terminal_emulator.feed(self._decode(output))
+            output = self._terminal_emulator.read_until_fuzzy(expected, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
             if output:
                 return True, output
         return False, self._terminal_emulator.read()
@@ -1312,6 +1345,21 @@ class TerminalEmulator:
             return current_out[: exp_index + len(expected)]
         return None
 
+    def read_until_fuzzy(self, expected, max_substitutions=None, max_insertions=None, max_deletions=None):
+        current_out = self.current_output
+
+        match = fuzzy.fuzzy_find(current_out, expected, max_insertions=max_insertions, max_deletions=max_deletions, max_substitutions=max_substitutions)
+        if match is None:
+            return None
+
+        exp_index = match.start
+        match_len = len(match.matched)
+        current_out.find(expected)
+        if exp_index != -1:
+            self._update_buffer(current_out[exp_index+match_len:])
+            return current_out[:exp_index+match_len]
+        return None
+
     def read_until_regexp(self, regexp_list):
         current_out = self.current_output
         for rgx in regexp_list:
@@ -1346,3 +1394,5 @@ class NoMatchError(AssertionError):
         if self.output is not None:
             msg += " Output:\n" + self.output
         return msg
+
+
