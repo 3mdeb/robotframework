@@ -78,17 +78,20 @@ Using other options
     Test merge should have been successful    suite name=Custom
     Log should have been created with Fail keywords flattened
 
-Merge ignores skip
+Merge skip result
     Create Output With Robot    ${ORIGINAL}    ${EMPTY}    rebot/merge_statuses.robot
     Create Output With Robot    ${MERGE1}    --skip NOTskip    rebot/merge_statuses.robot
     Run Merge
-    ${prefix} =    Catenate
-    ...    *HTML* Test has been re-executed and results merged.
-    ...    Latter result had <span class="skip">SKIP</span> status and was ignored. Message:
+    ${pass msg} =    Create expected merge message    ${EMPTY}
+    ...    SKIP    Test skipped using 'NOT skip' tag pattern.    PASS    ${EMPTY}
+    ${fail msg} =    Create expected merge message    ${EMPTY}
+    ...    SKIP    Test skipped using 'NOT skip' tag pattern.    FAIL    Not &lt;b&gt;HTML&lt;/b&gt; fail
+    ${skip msg} =    Create expected merge message    ${EMPTY}
+    ...    SKIP    <b>HTML</b> skip    SKIP    <b>HTML</b> skip
     Should Contain Tests    ${SUITE}
-    ...    Pass=PASS:${prefix}\nTest skipped using 'NOT skip' tag pattern.
-    ...    Fail=FAIL:${prefix}\nTest skipped using 'NOT skip' tag pattern.<hr>Original message:\nNot &lt;b&gt;HTML&lt;/b&gt; fail
-    ...    Skip=SKIP:${prefix}\n<b>HTML</b> skip<hr>Original message:\n<b>HTML</b> skip
+    ...    Pass=SKIP:${pass msg}
+    ...    Fail=SKIP:${fail msg}
+    ...    Skip=SKIP:${skip msg}
 
 *** Keywords ***
 Run original tests
@@ -277,8 +280,10 @@ Create expected merge message header
 
 Create expected merge old message body
     [Arguments]    ${old status}    ${old message}
-    ${old status} =    Set Variable If    '${old status}' == 'PASS'
-    ...    <span class="pass">PASS</span>    <span class="fail">FAIL</span>
+    ${old status} =    Set Variable If
+    ...    '${old status}' == 'PASS'    <span class="pass">PASS</span>
+    ...    '${old status}' == 'FAIL'    <span class="fail">FAIL</span>
+    ...    <span class="skip">SKIP</span>
     ${old message} =    Set Variable If    '${old message}' != ''
     ...    ${old message}<br>    ${EMPTY}
     ${old message html achor} =    Set Variable If    '${old message}' != ''
@@ -289,8 +294,10 @@ Create expected merge old message body
 
 Create expected merge message body
     [Arguments]    ${new status}    ${new message}    ${old status}    ${old message}
-    ${new status} =    Set Variable If    '${new status}' == 'PASS'
-    ...    <span class="pass">PASS</span>    <span class="fail">FAIL</span>
+    ${new status} =    Set Variable If
+    ...    '${new status}' == 'PASS'    <span class="pass">PASS</span>
+    ...    '${new status}' == 'FAIL'    <span class="fail">FAIL</span>
+    ...    <span class="skip">SKIP</span>
     ${new message html achor} =    Set Variable If    '${new message}' != ''
     ...    <span class="new-message">New message:</span>${SPACE}    ${EMPTY}
     ${new message} =    Set Variable If    '${new message}' != ''
