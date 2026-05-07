@@ -70,8 +70,6 @@ class Merger(SuiteVisitor):
         if old is None:
             test.message = self._create_add_message(test)
             self.current.tests.append(test)
-        elif test.skipped:
-            old.message = self._create_skip_message(old, test)
         else:
             test.message = self._create_merge_message(test, old)
             index = self.current.tests.index(old)
@@ -129,13 +127,3 @@ class Merger(SuiteVisitor):
             self._message_header("New"),
             self._message_header("Old"),
         )
-
-    def _create_skip_message(self, test, new):
-        msg = (
-            f"*HTML* {test_or_task('Test', self.rpa)} has been re-executed and "
-            f"results merged. Latter result had {self._status_text('SKIP')} "
-            f"status and was ignored. Message:\n{self._html(new.message)}"
-        )
-        if test.message:
-            msg += f"<hr>Original message:\n{self._html(test.message)}"
-        return msg
